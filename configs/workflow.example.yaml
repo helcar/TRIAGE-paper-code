@@ -1,0 +1,166 @@
+# Example configuration: replace placeholders with your real paths; no private paths committed.
+# Run FF++ detector training once per model; use resulting frozen checkpoint for all 3 datasets.
+cnn_training_config: configs/cnn_finetune.yaml
+experiments:
+  xception_ffpp:
+    model: xception
+    dataset: "FF++ c23"
+    manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_FFPP_FACES"
+    output_dir: "runs/experiments/xception_ffpp"
+    checkpoint: "runs/detectors/xception/xception_best.pth"
+    training_output_dir: "runs/detectors/xception"
+    detector_split_dir: "runs/detector_split_seed42"
+    bench_dir: "PATH_TO_DEEPFAKEBENCH"
+    imagenet_weights: "PATH_TO_DEEPFAKEBENCH/training/pretrained/xception-b5690688.pth"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 64
+    layers:
+      - "backbone.block4"
+      - "backbone.block8"
+      - "backbone.block12"
+  xception_celeb:
+    model: xception
+    dataset: "Celeb-DF-v2"
+    manifest: "PATH_TO_CELEB_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_CELEB_FACES"
+    output_dir: "runs/experiments/xception_celeb"
+    checkpoint: "runs/detectors/xception/xception_best.pth"
+    training_output_dir: "runs/detectors/xception"
+    detector_split_dir: "runs/detector_split_seed42"
+    bench_dir: "PATH_TO_DEEPFAKEBENCH"
+    imagenet_weights: "PATH_TO_DEEPFAKEBENCH/training/pretrained/xception-b5690688.pth"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 64
+    layers:
+      - "backbone.block4"
+      - "backbone.block8"
+      - "backbone.block12"
+  xception_dfdc:
+    model: xception
+    dataset: "DFDC"
+    manifest: "PATH_TO_DFDC_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_DFDC_FACES"
+    output_dir: "runs/experiments/xception_dfdc"
+    checkpoint: "runs/detectors/xception/xception_best.pth"
+    training_output_dir: "runs/detectors/xception"
+    detector_split_dir: "runs/detector_split_seed42"
+    bench_dir: "PATH_TO_DEEPFAKEBENCH"
+    imagenet_weights: "PATH_TO_DEEPFAKEBENCH/training/pretrained/xception-b5690688.pth"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 64
+    layers:
+      - "backbone.block4"
+      - "backbone.block8"
+      - "backbone.block12"
+  effb4_ffpp:
+    model: efficientnetb4
+    dataset: "FF++ c23"
+    manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_FFPP_FACES"
+    output_dir: "runs/experiments/effb4_ffpp"
+    checkpoint: "runs/detectors/efficientnetb4/efficientnetb4_best.pth"
+    training_output_dir: "runs/detectors/efficientnetb4"
+    detector_split_dir: "runs/detector_split_seed42"
+    bench_dir: "PATH_TO_DEEPFAKEBENCH"
+    imagenet_weights: "PATH_TO_DEEPFAKEBENCH/training/pretrained/efficientnet-b4-6ed6700e.pth"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 64
+    layers:
+      - "backbone.efficientnet._blocks.15"
+      - "backbone.efficientnet._blocks.21"
+      - "backbone.efficientnet._blocks.29"
+  effb4_celeb:
+    model: efficientnetb4
+    dataset: "Celeb-DF-v2"
+    manifest: "PATH_TO_CELEB_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_CELEB_FACES"
+    output_dir: "runs/experiments/effb4_celeb"
+    checkpoint: "runs/detectors/efficientnetb4/efficientnetb4_best.pth"
+    training_output_dir: "runs/detectors/efficientnetb4"
+    detector_split_dir: "runs/detector_split_seed42"
+    bench_dir: "PATH_TO_DEEPFAKEBENCH"
+    imagenet_weights: "PATH_TO_DEEPFAKEBENCH/training/pretrained/efficientnet-b4-6ed6700e.pth"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 64
+    layers:
+      - "backbone.efficientnet._blocks.15"
+      - "backbone.efficientnet._blocks.21"
+      - "backbone.efficientnet._blocks.29"
+  effb4_dfdc:
+    model: efficientnetb4
+    dataset: "DFDC"
+    manifest: "PATH_TO_DFDC_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_DFDC_FACES"
+    output_dir: "runs/experiments/effb4_dfdc"
+    checkpoint: "runs/detectors/efficientnetb4/efficientnetb4_best.pth"
+    training_output_dir: "runs/detectors/efficientnetb4"
+    detector_split_dir: "runs/detector_split_seed42"
+    bench_dir: "PATH_TO_DEEPFAKEBENCH"
+    imagenet_weights: "PATH_TO_DEEPFAKEBENCH/training/pretrained/efficientnet-b4-6ed6700e.pth"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 64
+    layers:
+      - "backbone.efficientnet._blocks.15"
+      - "backbone.efficientnet._blocks.21"
+      - "backbone.efficientnet._blocks.29"
+  vit_ffpp:
+    model: vit
+    dataset: "FF++ c23"
+    manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_FFPP_FACES"
+    output_dir: "runs/experiments/vit_ffpp"
+    checkpoint: "runs/detectors/vit/best_vit_ffpp.pth"
+    training_output_dir: "runs/detectors/vit"
+    detector_split_dir: "runs/detector_split_seed42"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 32
+    layers:
+      - "classifier.vit.layers.2"
+      - "classifier.vit.layers.5"
+      - "classifier.vit.layers.7"
+      - "classifier.vit.layers.9"
+      - "classifier.vit.layers.11"
+  vit_celeb:
+    model: vit
+    dataset: "Celeb-DF-v2"
+    manifest: "PATH_TO_CELEB_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_CELEB_FACES"
+    output_dir: "runs/experiments/vit_celeb"
+    checkpoint: "runs/detectors/vit/best_vit_ffpp.pth"
+    training_output_dir: "runs/detectors/vit"
+    detector_split_dir: "runs/detector_split_seed42"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 32
+    layers:
+      - "classifier.vit.layers.2"
+      - "classifier.vit.layers.5"
+      - "classifier.vit.layers.7"
+      - "classifier.vit.layers.9"
+      - "classifier.vit.layers.11"
+  vit_dfdc:
+    model: vit
+    dataset: "DFDC"
+    manifest: "PATH_TO_DFDC_FRAME_MANIFEST.csv"
+    image_root: "PATH_TO_DFDC_FACES"
+    output_dir: "runs/experiments/vit_dfdc"
+    checkpoint: "runs/detectors/vit/best_vit_ffpp.pth"
+    training_output_dir: "runs/detectors/vit"
+    detector_split_dir: "runs/detector_split_seed42"
+    device: cuda
+    extraction_batch: 2
+    triage_batch: 32
+    layers:
+      - "classifier.vit.layers.2"
+      - "classifier.vit.layers.5"
+      - "classifier.vit.layers.7"
+      - "classifier.vit.layers.9"
+      - "classifier.vit.layers.11"
