@@ -44,4 +44,4 @@ python -m triage_repro.workflow --config configs/workflow.example.yaml --experim
 
 Experiment names follow `xception_ffpp`, `effb4_celeb`, `vit_dfdc`, etc. Available stages: `audit`, `split`, `train`, `select`, `test`, `all`. Train each detector on FF++ once, then reuse its frozen checkpoint on Celeb-DF-v2 and DFDC. The TEST partition is evaluated only after validation selection.
 
-The source code does not include dataset images, ImageNet weights, trained checkpoints or precomputed experimental scores.
+The source code does not include dataset images, ImageNet weights, trained checkpoints or precomputed experimental scores as the paper is under review
