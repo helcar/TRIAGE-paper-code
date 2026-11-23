@@ -1,7 +1,6 @@
-# Install PyTorch for your CUDA/CPU environment separately.
-numpy>=1.24
-Pillow>=9.0
+# Install the CUDA-appropriate PyTorch build first (see PyTorch documentation).
+-r code/requirements.txt
+Pillow>=9.1
 PyYAML>=6.0
-scikit-learn>=1.2
-pytest>=7.0
-# DeepfakeBench's own dependencies and efficientnet_pytorch are also required.
+joblib>=1.3
+efficientnet-pytorch>=0.7.1
