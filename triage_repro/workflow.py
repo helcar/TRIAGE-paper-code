@@ -63,6 +63,8 @@ def extract_command(exp, layer, target, splits, authorize_test=False):
                  "--image-size", "256", "--batch-size", str(exp.get("extraction_batch", 2))]
     else:
         argv += ["--finetuned-checkpoint", exp["checkpoint"]]
+        if exp.get("training_manifest"):
+            argv += ["--training-manifest", exp["training_manifest"]]
         if exp.get("vit_revision"):
             argv += ["--revision", exp["vit_revision"]]
     if authorize_test:
