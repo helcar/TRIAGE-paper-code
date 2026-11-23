@@ -1,0 +1,19 @@
+# Proposed controlled protocol, NOT the historical CNN training configuration.
+seed: 42
+holdout_fraction: 0.15
+image_size: 256
+normalization_mean: [0.5, 0.5, 0.5]
+normalization_std: [0.5, 0.5, 0.5]
+horizontal_flip_probability: 0.5
+class_balanced_sampling: true
+optimizer: adam
+learning_rate: 0.00002
+weight_decay: 0.0005
+scheduler: none
+epochs: 10
+batch_size: 4
+gradient_accumulation_steps: 8
+num_workers: 0
+use_amp: true
+selection_metric: detector_holdout_auroc
+train_all_layers: true
