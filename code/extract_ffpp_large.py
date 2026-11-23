@@ -5,6 +5,7 @@ aligned face crops. Writes each split to OUTPUT_DIR/<split>/{logits,labels,
 features,attributions}.npy. Arrays can be read with mmap_mode='r'.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import numpy as np
@@ -18,12 +19,20 @@ from .xception_adapter import build_deepfakebench_xception, resolve_layer
 ARRAY_NAMES=("logits","labels","features","attributions")
 
 
-def extract_split(rows, root, out, extractor, batch_size, size, overwrite=False):
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for block in iter(lambda: stream.read(4 * 1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def extract_split(rows, root, out, extractor, batch_size, size, provenance, overwrite=False):
     out=Path(out)
     flag=out / "_complete.json"
     if flag.exists() and not overwrite:
         meta=json.loads(flag.read_text())
-        if meta.get("images")==len(rows) and all((out/f"{name}.npy").is_file() for name in ARRAY_NAMES):
+        if meta.get("images")==len(rows) and all(meta.get(k)==v for k,v in provenance.items()) and all((out/f"{name}.npy").is_file() for name in ARRAY_NAMES):
             print(json.dumps({"skipped_completed":str(out),"images":len(rows)}))
             return
         raise RuntimeError(f"Existing output does not match manifest: {out}. Delete it before retry")
@@ -55,7 +64,7 @@ def extract_split(rows, root, out, extractor, batch_size, size, overwrite=False)
         if offset!=len(rows): raise RuntimeError(f"Processed {offset} of {len(rows)}")
         for arr in buffers.values(): arr.flush()
         del buffers
-        flag.write_text(json.dumps({"images":len(rows),"labels":{
+        flag.write_text(json.dumps({**provenance,"images":len(rows),"labels":{
             "real":sum(x["label"]=="0" for x in rows),
             "fake":sum(x["label"]=="1" for x in rows)}}))
         print(json.dumps({"complete":str(out),"images":offset}),flush=True)
@@ -76,19 +85,30 @@ def main():
     p.add_argument("--image-size",type=int,default=256)
     p.add_argument("--device",default="cuda")
     p.add_argument("--overwrite",action="store_true")
-    p.add_argument("--splits",nargs="+",choices=("fit","cal","val","test"),default=("fit","cal","val","test"),help="Choose splits; omit test during exploratory development")
+    p.add_argument("--splits",nargs="+",choices=("fit","cal","val","test"),default=("fit","cal","val"),help="Default FIT/CAL/VAL; TEST must be explicitly authorized")
+    p.add_argument("--authorize-test",action="store_true",help="Allow test extraction only after validation selection")
     args=p.parse_args()
     if args.batch_size<1: p.error("batch-size must be positive")
+    if "test" in args.splits and not args.authorize_test:
+        p.error("TEST extraction is locked; add --authorize-test after validation-only selection")
     rows=load_manifest(args.manifest)
     output=Path(args.output_dir)
     model, info=build_deepfakebench_xception(args.bench_dir,args.checkpoint,args.device)
     print("Checkpoint:",json.dumps(info))
+    provenance={
+        "detector":"DeepfakeBench Xception",
+        "checkpoint_sha256":sha256(args.checkpoint),
+        "manifest_sha256":sha256(args.manifest),
+        "layer":args.layer,
+        "image_size":args.image_size,
+        "normalization":"(RGB/255-0.5)/0.5",
+    }
     extractor=DetectorAttributions(model,resolve_layer(model,args.layer),device=args.device)
     try:
         for split in args.splits:
             selected=[r for r in rows if r["split"]==split]
             extract_split(selected,args.image_root,output/split,extractor,
-                          args.batch_size,args.image_size,args.overwrite)
+                          args.batch_size,args.image_size,provenance,args.overwrite)
     finally:
         extractor.close()
 
