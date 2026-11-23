@@ -1,6 +1,0 @@
-# Install the CUDA-appropriate PyTorch build first (see PyTorch documentation).
--r code/requirements.txt
-Pillow>=9.1
-PyYAML>=6.0
-joblib>=1.3
-efficientnet-pytorch>=0.7.1
