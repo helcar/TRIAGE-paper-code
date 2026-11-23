@@ -1,0 +1,4 @@
+# Optional video and face-alignment dependencies (also require DeepfakeBench assets).
+-r requirements-cnn.txt
+opencv-python>=4.8
+dlib>=19.24
