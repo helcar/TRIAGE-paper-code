@@ -105,14 +105,22 @@ def instantiate_backbone(model_name: str, bench_dir: Path, weights: Path):
             }
         elif model_name == "efficientnetb4":
             # DeepfakeBench uses efficientnet_pytorch, not torchvision.
-            # IMPORTANT: its constructor replaces _conv_stem AFTER loading
-            # ImageNet weights, so the stem is newly initialized.
+            # Restore compatible ImageNet stem after DeepfakeBench reconstruction.
             model = BACKBONE["efficientnetb4"]({**cfg, "pretrained": str(weights)})
+            # Upstream DeepfakeBench reconstructs _conv_stem *after* loading
+            # ImageNet weights. Restore that exact compatible stem tensor.
+            image_net = torch.load(weights, map_location="cpu", weights_only=True)
+            stem = image_net.get("_conv_stem.weight") if isinstance(image_net, dict) else None
+            target = model.efficientnet._conv_stem.weight
+            if not torch.is_tensor(stem) or stem.shape != target.shape:
+                raise ValueError("Missing/incompatible EfficientNet-B4 ImageNet stem weights")
+            with torch.no_grad():
+                target.copy_(stem)
             provenance = {
                 "initialization": "efficientnet_pytorch ImageNet-B4 via DeepfakeBench",
                 "reinitialized_head": ["last_layer.*"],
-                "reinitialized_stem": ["efficientnet._conv_stem.*"],
-                "note": "DeepfakeBench replaces the pretrained stem after from_pretrained()",
+                "restored_imagenet_stem": True,
+                "note": "Preserves the DeepfakeBench architecture and restores ImageNet stem initialization",
             }
         else:
             raise ValueError(f"Unsupported model {model_name}")
