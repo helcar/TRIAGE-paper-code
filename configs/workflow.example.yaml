@@ -114,6 +114,7 @@ experiments:
     model: vit
     dataset: "FF++ c23"
     manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
+    training_manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
     image_root: "PATH_TO_FFPP_FACES"
     output_dir: "runs/experiments/vit_ffpp"
     checkpoint: "runs/detectors/vit/best_vit_ffpp.pth"
@@ -132,6 +133,7 @@ experiments:
     model: vit
     dataset: "Celeb-DF-v2"
     manifest: "PATH_TO_CELEB_FRAME_MANIFEST.csv"
+    training_manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
     image_root: "PATH_TO_CELEB_FACES"
     output_dir: "runs/experiments/vit_celeb"
     checkpoint: "runs/detectors/vit/best_vit_ffpp.pth"
@@ -150,6 +152,7 @@ experiments:
     model: vit
     dataset: "DFDC"
     manifest: "PATH_TO_DFDC_FRAME_MANIFEST.csv"
+    training_manifest: "PATH_TO_FFPP_FRAME_MANIFEST.csv"
     image_root: "PATH_TO_DFDC_FACES"
     output_dir: "runs/experiments/vit_dfdc"
     checkpoint: "runs/detectors/vit/best_vit_ffpp.pth"
