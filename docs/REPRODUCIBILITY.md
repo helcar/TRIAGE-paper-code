@@ -72,7 +72,7 @@ The `configs/workflow.example.yaml` describes all nine detector/dataset combinat
 python -m triage_repro.workflow --config configs/workflow.example.yaml --experiment xception_ffpp --stage select --dry-run
 ```
 
-For each model, use its FF++ experiment for `audit`, `split`, and `train`. A single fine-tuned detector checkpoint is reused across all datasets. For each dataset, `select` evaluates prespecified candidate layers using **FIT/CAL/VAL only**, executes the full hyperparameter grid, and selects by highest validation AUROC / AUPRC tie-breaker. `test` first refits TRIAGE and checks its selected **validation** AUROC and AUPRC; only then extracts and evaluates TEST.
+For each model, use its FF++ experiment for `audit`, `split`, and `train`. A single fine-tuned detector checkpoint is reused across all datasets. For each dataset, `select` evaluates candidate layers using **FIT/CAL/VAL only**. Following Appendix C, Xception and ViT use a common fixed-configuration layer screen (K=128, M=16, J=2, tau=1, weights 1/1/0.1) and then execute the full hyperparameter grid **only for the selected layer**. EfficientNet-B4 runs the same full validation grid for each candidate layer before selecting the layer. Selection is by validation AUROC, with AUPRC as the tie-breaker. `test` first refits TRIAGE and checks its selected **validation** AUROC and AUPRC; only then extracts and evaluates TEST.
 
 The hyperparameter grid in the current code:
 - `K ∈ {64,128,256,512}` prototypes, `M ∈ {4,8,16,32}` NMF topics per polarity
