@@ -7,7 +7,7 @@
 - Xception: `SCLBD/DeepfakeBench` `BACKBONE["xception"]`, `mode="original"`, `inc=3`, `num_classes=2`, `dropout=False`. ImageNet initialization: `xception-b5690688.pth`; pointwise weights are adapted as required by the upstream detector initialization, with all non-head parameters checked.
 - EfficientNet-B4: `SCLBD/DeepfakeBench` `BACKBONE["efficientnetb4"]`, backed by `efficientnet_pytorch.EfficientNet`, `num_classes=2`, `inc=3`, `dropout=False`. ImageNet initialization: `efficientnet-b4-6ed6700e.pth`.
 - Both use the EXACT DeepfakeBench intermediate modules, not timm/torchvision substitutions. In the original paper, TRIAGE uses Xception `backbone.block8`, and B4 `backbone.efficientnet._blocks.29` (FF++) / `_blocks.15` (Celeb/DFDC).
-- **Upstream EfficientNet-B4 nuance:** DeepfakeBench recreates `efficientnet._conv_stem` *after* loading ImageNet weights. That stem and the new binary head are randomly initialized; the remaining backbone receives ImageNet weights. Full-network fine-tuning updates all of them. This is logged in `training_report.json`.
+- **Upstream EfficientNet-B4 nuance:** DeepfakeBench recreates `efficientnet._conv_stem` *after* loading ImageNet weights. Our trainer explicitly restores the matching ImageNet stem tensor, while preserving the DeepfakeBench architecture and its MBConv block indices. The **binary classification head** is newly initialized; the full model is then fine-tuned. This restoration is recorded in `training_report.json`.
 - Both models produce two logits, one per class; class 0 REAL, class 1 FAKE.
 
 ## Advisor's six reproducibility questions
