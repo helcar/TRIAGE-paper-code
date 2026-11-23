@@ -233,13 +233,15 @@ def run(args):
     feature = FeatureBaselines().fit(pool(cal, batch), cal["labels"], pred(cal))
     features = feature.score(pool(test, batch), cp)
     pad_reference = fit_prototype_profiles(c_positive, c_negative, cal["labels"], pred(cal))
+    triage_values, explanations = model.score(
+        model.encode(t_positive, t_negative), cp, explain=True)
     signals = {
         "Confidence": confidence_score(test["logits"]),
         "Centroid": features["centroid"],
         "Mahalanobis": features["mahalanobis"],
         "kNN": features["knn"],
         "PAD": prototype_attribution_divergence(t_positive, t_negative, cp, pad_reference),
-        "TRIAGE": model.score(model.encode(t_positive, t_negative), cp),
+        "TRIAGE": triage_values,
     }
     conf = 1.0 - signals["Confidence"]
     groups = [row["group_id"] for row in by_split["test"]]
@@ -280,6 +282,25 @@ def run(args):
                     "confidence": float(conf[i]),
                     **{name: float(values[i]) for name, values in signals.items()},
                 })
+    if args.explanations_jsonl:
+        path = Path(args.explanations_jsonl)
+        if path.exists():
+            raise FileExistsError(f"Refusing to overwrite explanations: {path}")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as stream:
+            for row, detail in zip(by_split["test"], explanations):
+                stream.write(json.dumps({
+                    "video_id": row["video_id"],
+                    "group_id": row["group_id"],
+                    "topic_explanation": detail,
+                }) + "\n")
+    if args.fitted_model:
+        import joblib
+        model_path = Path(args.fitted_model)
+        if model_path.exists():
+            raise FileExistsError(f"Refusing to overwrite fitted model: {model_path}")
+        model_path.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(model, model_path)
     print(json.dumps({"model": args.model, "dataset": args.dataset,
                       "frames": len(errors), "errors": int(errors.sum()),
                       "AUROC": {name: value["auroc"] for name, value
@@ -296,6 +317,8 @@ def main():
     p.add_argument("--model", required=True, choices=("xception", "efficientnetb4", "vit"))
     p.add_argument("--output-json", required=True)
     p.add_argument("--scores-csv")
+    p.add_argument("--explanations-jsonl", help="Optional per-prediction topic explanations")
+    p.add_argument("--fitted-model", help="Optional joblib model artifact; load only from trusted sources")
     p.add_argument("--transform-batch", type=int, default=64)
     p.add_argument("--bootstrap-repeats", type=int, default=1000)
     p.add_argument("--replay-tolerance", type=float, default=1e-6)
