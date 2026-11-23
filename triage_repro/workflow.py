@@ -18,6 +18,7 @@ from pathlib import Path
 import yaml
 
 from .select_layer import choose
+from .screen_layers_fixed import screen as screen_fixed_layers
 
 
 def run_command(argv, dry_run):
@@ -172,26 +173,63 @@ def main():
             grid = root / "validation_grid.json"
             csv = root / "validation_candidates.csv"
             run_command(extract_command(exp, layer, root, ("fit", "cal", "val")), args.dry_run)
-            run_command(tuning_command(exp, root, grid, csv), args.dry_run)
-            candidates.append((layer, root, grid))
-        if args.dry_run:
-            print("+ select layer using validation-only AUROC/AUPRC from:", candidates)
-        elif len(candidates) == 1:
-            selected_file.parent.mkdir(parents=True, exist_ok=True)
-            if selected_file.exists():
-                raise FileExistsError(selected_file)
-            selected_file.write_text(json.dumps({
-                "selected_layer": candidates[0][0],
-                "selected_arrays_root": str(candidates[0][1]),
-                "selected_grid_json": str(candidates[0][2]),
-                "selection_rule": "Only prespecified candidate; validated on TRIAGE VAL",
-                "test_accessed": False,
-                "candidates": [],
-            }, indent=2), encoding="utf-8")
+            candidates.append((layer, root, grid, csv))
+
+        if exp["model"] in ("xception", "vit"):
+            # Reproduce Appendix C: fixed-config layer screen BEFORE the
+            # full TRIAGE hyperparameter grid, which is run once only.
+            if args.dry_run:
+                print("+ fixed-configuration VAL screen for:",
+                      [(layer, str(root)) for layer, root, _, _ in candidates])
+                chosen = candidates[0]
+                print("+ [DRY RUN: subsequent full grid runs ONLY for winning layer]")
+            else:
+                if len(candidates) == 1:
+                    chosen = candidates[0]
+                    selected_file.parent.mkdir(parents=True, exist_ok=True)
+                    if selected_file.exists():
+                        raise FileExistsError(selected_file)
+                    selected_file.write_text(json.dumps({
+                        "selected_layer": chosen[0],
+                        "selected_arrays_root": str(chosen[1]),
+                        "selected_grid_json": str(chosen[2]),
+                        "selection_rule": "Single prespecified layer",
+                        "test_accessed": False,
+                        "candidates": [],
+                    }, indent=2), encoding="utf-8")
+                else:
+                    selected = screen_fixed_layers(
+                        [(layer, root) for layer, root, _, _ in candidates],
+                        selected_file, batch=32)
+                    chosen = next(entry for entry in candidates
+                                  if entry[0] == selected["selected_layer"])
+                    print("Fixed-screen selected layer:", selected["selected_layer"])
+            run_command(tuning_command(exp, chosen[1], chosen[2], chosen[3]), args.dry_run)
         else:
-            result = choose([(x, str(root), str(grid)) for x, root, grid in candidates],
-                            selected_file)
-            print("Selected layer:", result["selected_layer"])
+            # v14 EfficientNet-B4 layer selection searches every layer with
+            # the same validation grid and selects AUROC/AUPRC only.
+            for _, root, grid, csv in candidates:
+                run_command(tuning_command(exp, root, grid, csv), args.dry_run)
+            if args.dry_run:
+                print("+ full-grid VAL layer selection from:",
+                      [(layer, str(root)) for layer, root, _, _ in candidates])
+            elif len(candidates) == 1:
+                selected_file.parent.mkdir(parents=True, exist_ok=True)
+                if selected_file.exists():
+                    raise FileExistsError(selected_file)
+                selected_file.write_text(json.dumps({
+                    "selected_layer": candidates[0][0],
+                    "selected_arrays_root": str(candidates[0][1]),
+                    "selected_grid_json": str(candidates[0][2]),
+                    "selection_rule": "Single prespecified layer",
+                    "test_accessed": False,
+                    "candidates": [],
+                }, indent=2), encoding="utf-8")
+            else:
+                result = choose([(layer, str(root), str(grid))
+                                 for layer, root, grid, _ in candidates],
+                                selected_file)
+                print("Selected layer:", result["selected_layer"])
 
     def test():
         if args.dry_run:
