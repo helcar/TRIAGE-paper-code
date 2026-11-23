@@ -9,6 +9,7 @@ import argparse
 import csv
 import json
 import random
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -18,6 +19,7 @@ import torch
 import torch.nn as nn
 import yaml
 from PIL import Image
+import sklearn
 from sklearn.metrics import accuracy_score, roc_auc_score
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
@@ -154,6 +156,17 @@ def evaluate(model, loader, device, use_amp):
     }
 
 
+def git_revision(path: Path) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True, timeout=10,
+        )
+    except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout.strip() or None
+
+
 def run(args):
     config_path = Path(args.config)
     config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -234,6 +247,22 @@ def run(args):
         raise RuntimeError("CUDA requested but unavailable")
     amp = bool(config["use_amp"]) and device.type == "cuda"
     weights_path = Path(args.imagenet_weights).resolve()
+    expected_name = (
+        "xception-b5690688.pth" if args.model == "xception"
+        else "efficientnet-b4-6ed6700e.pth"
+    )
+    if weights_path.name != expected_name:
+        raise ValueError(
+            f"Expected compatible DeepfakeBench ImageNet initialization {expected_name}; "
+            f"found {weights_path.name}. Do not use an FF++ detector checkpoint."
+        )
+    weight_provenance = weights_path.with_suffix(".provenance.json")
+    if weight_provenance.is_file():
+        record = json.loads(weight_provenance.read_text(encoding="utf-8"))
+        if record.get("checkpoint_sha256") != sha256(weights_path):
+            raise ValueError("ImageNet initialization checksum differs from provenance record")
+        if record.get("model") != args.model:
+            raise ValueError("ImageNet initialization provenance model mismatch")
     model, initialization = instantiate_backbone(args.model, Path(args.bench_dir), weights_path)
     model = model.to(device)
     optimizer = torch.optim.Adam(
@@ -285,6 +314,13 @@ def run(args):
     report = {
         "model": args.model,
         "model_library": "DeepfakeBench BACKBONE",
+        "deepfakebench_git_revision": git_revision(Path(args.bench_dir).resolve()),
+        "library_versions": {
+            "torch": torch.__version__,
+            "numpy": np.__version__,
+            "scikit_learn": sklearn.__version__,
+        },
+        "image_root_recorded": False,
         "upstream_backbone": "efficientnet_pytorch" if args.model == "efficientnetb4" else "DeepfakeBench/FF++ Xception",
         "imagenet_weights_sha256": sha256(weights_path),
         "source_manifest_sha256": sha256(source_path),
