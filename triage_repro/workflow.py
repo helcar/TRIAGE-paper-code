@@ -18,7 +18,6 @@ from pathlib import Path
 import yaml
 
 from .select_layer import choose
-from .screen_layers_fixed import screen as screen_fixed_layers
 
 
 def run_command(argv, dry_run):
@@ -198,6 +197,7 @@ def main():
                         "candidates": [],
                     }, indent=2), encoding="utf-8")
                 else:
+                    from .screen_layers_fixed import screen as screen_fixed_layers
                     selected = screen_fixed_layers(
                         [(layer, root) for layer, root, _, _ in candidates],
                         selected_file, batch=32)
