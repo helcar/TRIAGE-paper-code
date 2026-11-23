@@ -26,7 +26,7 @@ This repository implements the face-deepfake detector training, feature-attribut
 | `triage_repro/select_layer.py` | Validation-based EfficientNet-B4 layer selection |
 | `triage_repro/evaluate_final.py` | Final six-method misclassification ranking, explanations, queues and bootstrap metrics |
 | `code/evaluate_ffpp_reference_lomo.py` | FF++ leave-one-manipulation-out TRIAGE analysis |
-| `code/topic_sensitivity_v11.py` | Topic-attribution perturbation analysis |
+| `code/topic_sensitivity.py` | Topic-attribution perturbation analysis |
 
 The remaining Python files are small helpers imported by these modules: detector adapters, frame loaders, manifest validation, prototype transformations and baseline metrics.
 
