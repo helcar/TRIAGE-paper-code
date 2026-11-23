@@ -1,0 +1,26 @@
+# Never commit copyrighted datasets, private metadata, weights, or machine-specific outputs.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.idea/
+.env
+.DS_Store
+data/
+datasets/
+checkpoints/
+runs/
+outputs/
+results/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.npz
+*.npy
+*.mp4
+*.avi
+*.zip
+*.tar
+*.tar.gz
