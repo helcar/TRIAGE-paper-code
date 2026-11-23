@@ -12,5 +12,5 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install pytest numpy PyYAML
       - run: python -m compileall -q triage_repro code tests
-      - run: python -m pytest -q tests/test_manifest.py tests/test_workflow.py tests/test_select_layer.py
+      - run: python -m pytest -q tests
       - run: python -m triage_repro.workflow --config configs/workflow.example.yaml --experiment xception_ffpp --stage select --dry-run
