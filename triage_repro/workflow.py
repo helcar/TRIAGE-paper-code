@@ -99,7 +99,11 @@ def evaluation_command(exp, root, grid, output_json, scores_csv, authorize_test=
     if exp["dataset"] == "FF++ c23":
         cmd.append("--ffpp-official")
     if authorize_test:
-        cmd.append("--authorize-test")
+        cmd += [
+            "--authorize-test",
+            "--explanations-jsonl", str(Path(output_json).with_name("topic_explanations.jsonl")),
+            "--fitted-model", str(Path(output_json).with_name("fitted_triage.joblib")),
+        ]
     return cmd
 
 
