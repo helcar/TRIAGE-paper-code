@@ -11,4 +11,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install pytest
+      - run: python -m compileall -q triage_repro code tests
       - run: python -m pytest -q tests/test_manifest.py
